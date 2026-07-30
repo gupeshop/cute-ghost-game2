@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cute Ghost 3D Game - God Mode</title>
+    <title>Cute Ghost Mansion - Flashlight POV</title>
     <style>
         body {
             margin: 0;
@@ -17,7 +17,19 @@
             height: 100vh;
             display: block;
         }
-        /* UI HUD */
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background-color: rgba(255, 117, 140, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 0 6px #ff758c;
+        }
         #hud {
             position: absolute;
             top: 20px;
@@ -30,18 +42,72 @@
         #hud h1 { margin: 0 0 5px 0; font-size: 24px; color: #ff758c; }
         #hud p { margin: 2px 0; font-size: 16px; }
 
-        /* God Mode Panel */
+        #controls-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 12, 27, 0.85);
+            color: #ff758c;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(255,117,140,0.4);
+            pointer-events: none;
+            z-index: 10;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+
+        #blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(11, 11, 26, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+        #instructions {
+            text-align: center;
+            color: #fff;
+            max-width: 500px;
+            padding: 30px;
+            background: rgba(26, 26, 46, 0.95);
+            border: 2px solid #ff758c;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(255,117,140,0.4);
+        }
+        #instructions h2 { color: #ff758c; margin-top: 0; font-size: 28px; }
+        #instructions p { color: #ddd; font-size: 16px; line-height: 1.6; }
+        #instructions .btn {
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(255,117,140,0.5);
+            transition: transform 0.2s;
+        }
+        #instructions .btn:hover { transform: scale(1.05); }
+
         #god-panel {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(15, 15, 30, 0.85);
+            background: rgba(15, 15, 30, 0.95);
             border: 2px solid #ff758c;
             border-radius: 12px;
             padding: 15px 20px;
             color: #fff;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            backdrop-filter: blur(8px);
             z-index: 100;
             display: none;
             min-width: 220px;
@@ -68,20 +134,6 @@
             height: 18px;
             cursor: pointer;
         }
-        #toggle-hint {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.6);
-            color: #ff758c;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            border: 1px solid rgba(255,117,140,0.4);
-            pointer-events: none;
-            z-index: 10;
-        }
         #loading {
             position: absolute;
             top: 50%;
@@ -90,188 +142,373 @@
             color: #fff;
             font-size: 22px;
             font-weight: bold;
-            z-index: 1000;
+            z-index: 1001;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="loading">Loading 3D World... 👻</div>
-    <div id="canvas-container"></div>
-
-    <div id="hud">
-        <h1>👻 Cute Ghost 3D</h1>
-        <p>Score: <span id="score-val">0</span></p>
-        <p>Status: <span id="status-val" style="color: #4cd137;">Normal</span></p>
-    </div>
-
-    <div id="toggle-hint">Press [ G ] to open God Mode Menu</div>
-
-    <!-- God Mode Control Panel -->
-    <div id="god-panel">
-        <h3>⚡ GOD MODE MENU</h3>
-        <label class="cheat-option">
-            <span>🛡️ Invincibility</span>
-            <input type="checkbox" id="cheat-god">
-        </label>
-        <label class="cheat-option">
-            <span>🕊️ Fly Mode</span>
-            <input type="checkbox" id="cheat-fly">
-        </label>
-        <label class="cheat-option">
-            <span>🚀 Super Speed</span>
-            <input type="checkbox" id="cheat-speed">
-        </label>
-        <label class="cheat-option">
-            <span>💰 Score x100</span>
-            <input type="checkbox" id="cheat-score">
-        </label>
-        <div style="margin-top: 12px; font-size: 11px; color: #aaa; text-align: center;">
-            Sound Hotkeys: [1-5] Play SFX
+    <div id="loading">กำลังสร้างคฤหาสน์ผีสิงสุดน่ารัก... 👻</div>
+    
+    <div id="blocker">
+        <div id="instructions">
+            <h2>👻 Cute Ghost Mansion 🔦</h2>
+            <p>
+                คุณได้รับบทเป็นนักสำรวจผู้ล่องหน ถือไฟฉายตามหาเจ้าหญิงผีสาวน้อยในห้องมืดสุดน่ารัก<br>
+                <b>[คลิกเพื่อเริ่มเกม]</b>
+            </p>
+            <p style="font-size: 13px; color: #aaa;">
+                🎮 ควบคุม: [W A S D] เดิน | [Mouse] มองรอบๆ<br>
+                💡 [F] เปิด/ปิดไฟฉาย | [1-5] เล่นเสียงผี | [G] เปิดเมนูโกด
+            </p>
+            <button class="btn">คลิกเพื่อเข้าสู่เกม 🕯️</button>
         </div>
     </div>
 
-    <!-- Include Three.js & GLTFLoader via CDN -->
+    <div id="canvas-container"></div>
+    <div id="crosshair"></div>
+
+    <div id="hud">
+        <h1>👻 Cute Ghost Mansion</h1>
+        <p>Score (คะแนนสำรวจ): <span id="score-val">0</span></p>
+        <p>Status: <span id="status-val" style="color: #4cd137;">กำลังสำรวจห้องมืด...</span></p>
+    </div>
+
+    <div id="controls-hint">
+        💡 [W A S D] เดิน | เลื่อนเมาส์มองรอบๆ | [F] เปิด/ปิดไฟฉาย | [G] เมนูโกด
+    </div>
+
+    <div id="god-panel">
+        <h3>⚡ GOD MODE MENU</h3>
+        <label class="cheat-option">
+            <span>🛡️ อมตะ (God Mode)</span>
+            <input type="checkbox" id="cheat-god">
+        </label>
+        <label class="cheat-option">
+            <span>🕊️ เดินทะลุผนัง (No Clip)</span>
+            <input type="checkbox" id="cheat-noclip">
+        </label>
+        <label class="cheat-option">
+            <span>🚀 วิ่งเร็วแสง (Super Speed)</span>
+            <input type="checkbox" id="cheat-speed">
+        </label>
+        <div style="margin-top: 12px; font-size: 11px; color: #aaa; text-align: center;">
+            เสียง: [1]กลัว [2]ร้อง [3]หัวเราะ [4]ร้องเพลง [5]ขู่
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 
     <script>
         // --- AUDIO SYSTEM ---
         const sounds = {
-            scare1: new Audio('scare1.mp3'),
-            crying: new Audio('crying.mp3'),
-            laugh: new Audio('laugh.mp3'),
-            singing: new Audio('singing.mp3'),
-            growl: new Audio('growl.mp3')
+            1: new Audio('ผีกลัว1.mp3'),
+            2: new Audio('ผีกลัวจนร้อง.mp3'),
+            3: new Audio('ผีหัวเราะ.mp3'),
+            4: new Audio('ผีอารมณ์ดีร้องเพลง.mp3'),
+            5: new Audio('เสียงขู่ให้ตกใจ.mp3')
         };
 
-        function playSound(name) {
-            if (sounds[name]) {
-                sounds[name].currentTime = 0;
-                sounds[name].play().catch(e => console.log("Audio play blocked or missing:", e));
+        function playSound(key) {
+            if (sounds[key]) {
+                sounds[key].currentTime = 0;
+                sounds[key].play().catch(e => console.log("Audio play blocked:", e));
             }
         }
 
         // --- SCENE SETUP ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0b0b1a);
-        scene.fog = new THREE.FogExp2(0x0b0b1a, 0.03);
+        scene.background = new THREE.Color(0x080711);
+        scene.fog = new THREE.FogExp2(0x080711, 0.035);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 3, 6);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 1.7, 8);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
         container.appendChild(renderer.domElement);
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-
-        // --- LIGHTING (Prevent Black Screen) ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0x1a1633, 1.2);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xff758c, 1.5);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
+        const pointLight1 = new THREE.PointLight(0xff758c, 1.5, 15);
+        pointLight1.position.set(-10, 4, -10);
+        scene.add(pointLight1);
 
-        const backLight = new THREE.DirectionalLight(0x70a1ff, 1.0);
-        backLight.position.set(-5, -5, -5);
-        scene.add(backLight);
+        const pointLight2 = new THREE.PointLight(0x70a1ff, 1.5, 15);
+        pointLight2.position.set(10, 4, 10);
+        scene.add(pointLight2);
 
-        // --- LOAD 3D MODEL ---
+        // --- FLASHLIGHT (POV HAND & SPOTLIGHT) ---
+        const flashlightGroup = new THREE.Group();
+        camera.add(flashlightGroup);
+        scene.add(camera);
+
+        const spotLight = new THREE.SpotLight(0xffffff, 3.5, 25, Math.PI / 5, 0.4, 1.5);
+        spotLight.position.set(0, 0, 0);
+        spotLight.target.position.set(0, 0, -10);
+        spotLight.castShadow = true;
+        spotLight.shadow.bias = -0.001;
+        flashlightGroup.add(spotLight);
+        flashlightGroup.add(spotLight.target);
+
+        let flashlightOn = true;
+
+        // Flashlight Hand Mesh (POV)
+        const handGroup = new THREE.Group();
+        const flashBodyGeo = new THREE.CylinderGeometry(0.08, 0.1, 0.6, 16);
+        flashBodyGeo.rotateX(Math.PI / 2);
+        const flashMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 });
+        const flashMesh = new THREE.Mesh(flashBodyGeo, flashMat);
+        handGroup.add(flashMesh);
+
+        const handGeo = new THREE.BoxGeometry(0.2, 0.18, 0.35);
+        const handMat = new THREE.MeshStandardMaterial({ color: 0xf2d3b1, roughness: 0.7 });
+        const handMesh = new THREE.Mesh(handGeo, handMat);
+        handMesh.position.set(0, -0.1, 0.15);
+        handGroup.add(handMesh);
+
+        handGroup.position.set(0.35, -0.3, -0.5);
+        camera.add(handGroup);
+
+        // --- DETAILED ROOM & PROPS ---
+        const floorGeo = new THREE.PlaneGeometry(50, 50);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x141226, roughness: 0.7, metalness: 0.1 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = 0;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const ceilGeo = new THREE.PlaneGeometry(50, 50);
+        const ceilMat = new THREE.MeshStandardMaterial({ color: 0x090814, roughness: 0.9 });
+        const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
+        ceiling.rotation.x = Math.PI / 2;
+        ceiling.position.y = 10;
+        scene.add(ceiling);
+
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e1a38, roughness: 0.8 });
+        const wallBack = new THREE.Mesh(new THREE.PlaneGeometry(50, 10), wallMat);
+        wallBack.position.set(0, 5, -25);
+        wallBack.receiveShadow = true;
+        scene.add(wallBack);
+
+        const wallFront = new THREE.Mesh(new THREE.PlaneGeometry(50, 10), wallMat);
+        wallFront.position.set(0, 5, 25);
+        wallFront.rotation.y = Math.PI;
+        scene.add(wallFront);
+
+        const wallLeft = new THREE.Mesh(new THREE.PlaneGeometry(50, 10), wallMat);
+        wallLeft.position.set(-25, 5, 0);
+        wallLeft.rotation.y = Math.PI / 2;
+        wallLeft.receiveShadow = true;
+        scene.add(wallLeft);
+
+        const wallRight = new THREE.Mesh(new THREE.PlaneGeometry(50, 10), wallMat);
+        wallRight.position.set(25, 5, 0);
+        wallRight.rotation.y = -Math.PI / 2;
+        scene.add(wallRight);
+
+        // Room Props (Furniture & Pillars)
+        const propMat = new THREE.MeshStandardMaterial({ color: 0x2b254a, roughness: 0.6 });
+        for (let i = 0; i < 18; i++) {
+            const w = Math.random() * 1.5 + 1;
+            const h = Math.random() * 4 + 2;
+            const d = Math.random() * 1.5 + 1;
+            const boxGeo = new THREE.BoxGeometry(w, h, d);
+            const box = new THREE.Mesh(boxGeo, propMat);
+            
+            let px = (Math.random() - 0.5) * 40;
+            let pz = (Math.random() - 0.5) * 40;
+            if (Math.abs(px) < 15 && Math.abs(pz) < 15) {
+                px = px > 0 ? 18 : -18;
+            }
+            box.position.set(px, h / 2, pz);
+            box.castShadow = true;
+            box.receiveShadow = true;
+            scene.add(box);
+        }
+
+        // Floating Dust Particles
+        const particleCount = 300;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        for(let i = 0; i < particleCount * 3; i += 3) {
+            particlePositions[i] = (Math.random() - 0.5) * 40;
+            particlePositions[i+1] = Math.random() * 10;
+            particlePositions[i+2] = (Math.random() - 0.5) * 40;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0xff758c, size: 0.08, transparent: true, opacity: 0.6 });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // --- LOAD 3D GHOST GIRL MODEL ---
         let ghostModel = null;
+        const ghostPosition = new THREE.Vector3(0, 0, -10);
+        let ghostTargetPos = new THREE.Vector3(0, 0, -10);
         const loader = new THREE.GLTFLoader();
+
         loader.load('scene.gltf', (gltf) => {
             ghostModel = gltf.scene;
-            ghostModel.scale.set(1, 1, 1);
-            ghostModel.position.set(0, 0, 0);
-            scene.add(ghostModel);
+            ghostModel.scale.set(1.2, 1.2, 1.2);
+            ghostModel.position.copy(ghostPosition);
             
+            ghostModel.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    if (child.material) {
+                        child.material.roughness = 0.3;
+                        child.material.metalness = 0.1;
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
+
+            scene.add(ghostModel);
             document.getElementById('loading').style.display = 'none';
-        }, (xhr) => {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-        }, (error) => {
-            console.error('An error happened loading GLTF:', error);
-            document.getElementById('loading').innerText = 'Error loading 3D Model! Check console.';
+        }, undefined, (error) => {
+            console.error('Error loading GLTF:', error);
+            document.getElementById('loading').innerText = 'โหลดโมเดล scene.gltf ไม่สำเร็จ! ตรวจสอบไฟล์ในโฟลเดอร์';
         });
 
-        // --- GAME STATE & CHEAT ENGINE ---
-        let score = 0;
-        const cheats = {
-            godMode: false,
-            flyMode: false,
-            superSpeed: false,
-            scoreMultiplier: false
-        };
+        // --- CONTROLS & POINTER LOCK ---
+        const controls = new THREE.PointerLockControls(camera, renderer.domElement);
+        const blocker = document.getElementById('blocker');
 
-        // UI Event Listeners
-        document.getElementById('cheat-god').addEventListener('change', (e) => cheats.godMode = e.target.checked);
-        document.getElementById('cheat-fly').addEventListener('change', (e) => cheats.flyMode = e.target.checked);
-        document.getElementById('cheat-speed').addEventListener('change', (e) => cheats.superSpeed = e.target.checked);
-        document.getElementById('cheat-score').addEventListener('change', (e) => cheats.scoreMultiplier = e.target.checked);
+        blocker.addEventListener('click', () => {
+            controls.lock();
+        });
 
-        // Hotkey [G] for God Mode Panel & Sound Triggers [1-5]
+        controls.addEventListener('lock', () => {
+            blocker.style.display = 'none';
+        });
+
+        controls.addEventListener('unlock', () => {
+            blocker.style.display = 'flex';
+        });
+
+        const moveState = { forward: false, backward: false, left: false, right: false };
+        const direction = new THREE.Vector3();
+
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'g' || e.key === 'G') {
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveState.forward = true;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveState.backward = true;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveState.left = true;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveState.right = true;
+
+            if (e.code === 'KeyF') {
+                flashlightOn = !flashlightOn;
+                spotLight.intensity = flashlightOn ? 3.5 : 0;
+            }
+
+            if (e.code === 'KeyG') {
                 const panel = document.getElementById('god-panel');
                 panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
             }
-            if (e.key === '1') playSound('scare1');
-            if (e.key === '2') playSound('crying');
-            if (e.key === '3') playSound('laugh');
-            if (e.key === '4') playSound('singing');
-            if (e.key === '5') playSound('growl');
+
+            if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                playSound(e.key);
+            }
         });
 
-        // --- ANIMATION LOOP ---
-        let clock = new THREE.Clock();
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW' || e.code === 'ArrowUp') moveState.forward = false;
+            if (e.code === 'KeyS' || e.code === 'ArrowDown') moveState.backward = false;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveState.left = false;
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveState.right = false;
+        });
+
+        // Cheats
+        const cheats = { godMode: false, noclip: false, superSpeed: false };
+        document.getElementById('cheat-god').addEventListener('change', (e) => cheats.godMode = e.target.checked);
+        document.getElementById('cheat-noclip').addEventListener('change', (e) => cheats.noclip = e.target.checked);
+        document.getElementById('cheat-speed').addEventListener('change', (e) => cheats.superSpeed = e.target.checked);
+
+        // --- GAME LOOP ---
+        const clock = new THREE.Clock();
+        let score = 0;
+        let ghostTimer = 0;
+
         function animate() {
             requestAnimationFrame(animate);
 
-            let delta = clock.getDelta();
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
 
-            // Score increment logic with Multiplier cheat
-            let addScore = cheats.scoreMultiplier ? 100 : 1;
-            score += addScore;
-            document.getElementById('score-val').innerText = score;
+            if (controls.isLocked) {
+                const speed = (cheats.superSpeed ? 16.0 : 6.0) * delta;
 
-            // Status display update
-            let activeCheats = [];
-            if (cheats.godMode) activeCheats.push("God");
-            if (cheats.flyMode) activeCheats.push("Fly");
-            if (cheats.superSpeed) activeCheats.push("Speed");
-            if (cheats.scoreMultiplier) activeCheats.push("x100");
-            
-            const statusVal = document.getElementById('status-val');
-            if (activeCheats.length > 0) {
-                statusVal.innerText = "CHEEATING (" + activeCheats.join(", ") + ")";
-                statusVal.style.color = "#ff4757";
-            } else {
-                statusVal.innerText = "Normal";
-                statusVal.style.color = "#4cd137";
+                direction.z = Number(moveState.forward) - Number(moveState.backward);
+                direction.x = Number(moveState.right) - Number(moveState.left);
+                direction.normalize();
+
+                if (moveState.forward || moveState.backward) controls.moveForward(direction.z * speed);
+                if (moveState.left || moveState.right) controls.moveRight(direction.x * speed);
+
+                if (!cheats.noclip) {
+                    camera.position.x = Math.max(-23, Math.min(23, camera.position.x));
+                    camera.position.z = Math.max(-23, Math.min(23, camera.position.z));
+                    camera.position.y = 1.7;
+                }
             }
 
-            // Gentle floating animation for the ghost model
+            // Ghost AI movement & reaction
             if (ghostModel) {
-                let speedFactor = cheats.superSpeed ? 5.0 : 1.0;
-                let hoverHeight = cheats.flyMode ? Math.sin(clock.getElapsedTime() * 3 * speedFactor) * 1.5 + 1.0 : Math.sin(clock.getElapsedTime() * 2) * 0.2;
-                ghostModel.position.y = hoverHeight;
-                ghostModel.rotation.y += 0.01 * speedFactor;
+                ghostTimer += delta;
+                if (ghostTimer > 5.0) {
+                    ghostTimer = 0;
+                    ghostTargetPos.set(
+                        (Math.random() - 0.5) * 30,
+                        Math.random() * 1.5 + 0.5,
+                        (Math.random() - 0.5) * 30
+                    );
+                }
+
+                ghostModel.position.lerp(ghostTargetPos, 0.02);
+                ghostModel.position.y += Math.sin(time * 3) * 0.005;
+                ghostModel.lookAt(camera.position.x, ghostModel.position.y, camera.position.z);
+
+                const distToPlayer = ghostModel.position.distanceTo(camera.position);
+                if (distToPlayer < 6) {
+                    score += 1;
+                    document.getElementById('score-val').innerText = score;
+                }
             }
 
-            controls.update();
+            // Dust particles animation
+            const positions = particleGeo.attributes.position.array;
+            for(let i = 1; i < positions.length; i += 3) {
+                positions[i] -= delta * 0.5;
+                if (positions[i] < 0) positions[i] = 10;
+            }
+            particleGeo.attributes.position.needsUpdate = true;
+
+            // Status updates
+            let statusText = flashlightOn ? "กำลังสำรวจ (เปิดไฟฉาย 🔦)" : "กำลังสำรวจ (ปิดไฟฉาย 🌑)";
+            if (ghostModel && ghostModel.position.distanceTo(camera.position) < 8) {
+                statusText = "👻 เจ้าหญิงผีสาวน้อยอยู่ใกล้คุณ!";
+                document.getElementById('status-val').style.color = "#ff758c";
+            } else {
+                document.getElementById('status-val').style.color = "#4cd137";
+            }
+            document.getElementById('status-val').innerText = statusText;
+
             renderer.render(scene, camera);
         }
 
         animate();
 
-        // --- WINDOW RESIZE ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
