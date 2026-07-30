@@ -1,159 +1,282 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>Luoli Run - Ultimate Edition</title>
-<style>
-body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif;
-user-select: none; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Ghost 3D Game - God Mode</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #0b0b1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        /* UI HUD */
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #hud h1 { margin: 0 0 5px 0; font-size: 24px; color: #ff758c; }
+        #hud p { margin: 2px 0; font-size: 16px; }
 
-#hud { position: absolute; top: 20px; left: 20px; color: #fff; font-size: 20px; font-
-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 10; }
-
-#cheat-panel { position: absolute; top: 20px; right: 20px; background: rgba(15, 23, 42,
-0.95); border: 2px solid #ef4444; border-radius: 8px; padding: 15px; color: #fff; z-index: 20;
-width: 260px; display: none; }
-#cheat-panel h3 { margin: 0 0 10px 0; color: #ef4444; font-size: 16px; text-align: center;
-border-bottom: 1px solid #334155; padding-bottom: 5px; }
-
-.cheat-item { margin-bottom: 8px; display: flex; justify-content: space-between; align-
-items: center; font-size: 14px; }
-
-.cheat-item input { accent-color: #ef4444; cursor: pointer; }
-#loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-color: #38bdf8; font-size: 24px; font-weight: bold; z-index: 100; text-align: center; }
-#reticle { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color:
-
-#94a3b8; font-size: 14px; z-index: 10; background: rgba(0,0,0,0.6); padding: 5px 15px; border-
-radius: 20px; }
-
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></
-script>
+        /* God Mode Panel */
+        #god-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 15, 30, 0.85);
+            border: 2px solid #ff758c;
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: none;
+            min-width: 220px;
+        }
+        #god-panel h3 {
+            margin: 0 0 10px 0;
+            color: #ff758c;
+            border-bottom: 1px solid rgba(255,117,140,0.3);
+            padding-bottom: 5px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .cheat-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .cheat-option input {
+            accent-color: #ff758c;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        #toggle-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: #ff758c;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(255,117,140,0.4);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 22px;
+            font-weight: bold;
+            z-index: 1000;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+    </style>
 </head>
 <body>
-<div id="loading">ก;าลังโหลดทรัพยากร 3D...<br><span style="font-size: 14px; color: #94a3b8;">Luoli
-Run Engine v2.5</span></div>
-<div id="hud">คะแนน: <span id="score">0</span> | พลังชวิตี : <span id="hp">100</span></div>
-<div id="reticle">กดปุ่ม [G] เปิด/ปิด God Mode | ลูกศรซ้าย-ขวา เปลี่ยนเลน | Spacebar กระโดด</div>
-•
-•
 
-•
-•
-•
+    <div id="loading">Loading 3D World... 👻</div>
+    <div id="canvas-container"></div>
 
-2
+    <div id="hud">
+        <h1>👻 Cute Ghost 3D</h1>
+        <p>Score: <span id="score-val">0</span></p>
+        <p>Status: <span id="status-val" style="color: #4cd137;">Normal</span></p>
+    </div>
 
-<div id="cheat-panel">
-<h3> GOD MODE & CHEATS </h3>
+    <div id="toggle-hint">Press [ G ] to open God Mode Menu</div>
 
-<div class="cheat-item"><label>อมตะ (Invincible)</label><input type="checkbox" id="cheat-
-god" checked></div>
+    <!-- God Mode Control Panel -->
+    <div id="god-panel">
+        <h3>⚡ GOD MODE MENU</h3>
+        <label class="cheat-option">
+            <span>🛡️ Invincibility</span>
+            <input type="checkbox" id="cheat-god">
+        </label>
+        <label class="cheat-option">
+            <span>🕊️ Fly Mode</span>
+            <input type="checkbox" id="cheat-fly">
+        </label>
+        <label class="cheat-option">
+            <span>🚀 Super Speed</span>
+            <input type="checkbox" id="cheat-speed">
+        </label>
+        <label class="cheat-option">
+            <span>💰 Score x100</span>
+            <input type="checkbox" id="cheat-score">
+        </label>
+        <div style="margin-top: 12px; font-size: 11px; color: #aaa; text-align: center;">
+            Sound Hotkeys: [1-5] Play SFX
+        </div>
+    </div>
 
-<div class="cheat-item"><label>โหมดบิน (Fly Mode)</label><input type="checkbox" id="cheat-
-fly"></div>
+    <!-- Include Three.js & GLTFLoader via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
-<div class="cheat-item"><label>ความเร็ว x5 (Super Speed)</label><input type="checkbox"
-id="cheat-speed"></div>
+    <script>
+        // --- AUDIO SYSTEM ---
+        const sounds = {
+            scare1: new Audio('scare1.mp3'),
+            crying: new Audio('crying.mp3'),
+            laugh: new Audio('laugh.mp3'),
+            singing: new Audio('singing.mp3'),
+            growl: new Audio('growl.mp3')
+        };
 
-<div class="cheat-item"><label>ปั๊มคะแนน x100</label><input type="checkbox" id="cheat-
-score"></div>
+        function playSound(name) {
+            if (sounds[name]) {
+                sounds[name].currentTime = 0;
+                sounds[name].play().catch(e => console.log("Audio play blocked or missing:", e));
+            }
+        }
 
-</div>
-<script>
-let scene, camera, renderer, player, clock;
-let score = 0, hp = 100, gameSpeed = 0.6;
-let lane = 0, targetX = 0, isJumping = false, jumpVelocity = 0;
-let cheats = { god: true, fly: false, speed: false, scoreMultiplier: false };
-init();
-animate();
-function init() {
-scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050510);
-scene.fog = new THREE.FogExp2(0x050510, 0.015);
-camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1,
-1000);
-camera.position.set(0, 4, 8);
-camera.lookAt(0, 1, 0);
-renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
-dirLight.position.set(10, 20, 10);
-scene.add(dirLight);
-// Road
-const road = new THREE.Mesh(new THREE.PlaneGeometry(15, 200), new
-THREE.MeshStandardMaterial({ color: 0x1e293b }));
-road.rotation.x = -Math.PI / 2;
-road.position.z = -100;
-scene.add(road);
-// Load Model (scene.gltf)
-const loader = new THREE.GLTFLoader();
-loader.load('scene.gltf', (gltf) => {
-player = gltf.scene;
+        // --- SCENE SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b0b1a);
+        scene.fog = new THREE.FogExp2(0x0b0b1a, 0.03);
 
-3
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 3, 6);
 
-player.scale.set(1.2, 1.2, 1.2);
-player.position.set(0, 0, 0);
-scene.add(player);
-document.getElementById('loading').style.display = 'none';
-}, undefined, () => {
-// Fallback Cube
-player = new THREE.Mesh(new THREE.BoxGeometry(1, 2, 1), new
-THREE.MeshStandardMaterial({ color: 0x38bdf8 }));
-player.position.set(0, 1, 0);
-scene.add(player);
-document.getElementById('loading').style.display = 'none';
-});
-clock = new THREE.Clock();
-window.addEventListener('resize', () => {
-camera.aspect = window.innerWidth / window.innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(window.innerWidth, window.innerHeight);
-});
-window.addEventListener('keydown', (e) => {
-if (e.key === 'ArrowLeft' || e.key === 'a') if (lane > -1) lane--;
-if (e.key === 'ArrowRight' || e.key === 'd') if (lane < 1) lane++;
-if ((e.key === ' ' || e.key === 'ArrowUp') && !isJumping && !cheats.fly)
-{ isJumping = true; jumpVelocity = 0.35; }
-if (e.key === 'g' || e.key === 'G') {
-const p = document.getElementById('cheat-panel');
-p.style.display = p.style.display === 'block' ? 'none' : 'block';
-}
-});
-document.getElementById('cheat-god').onchange = e => cheats.god = e.target.checked;
-document.getElementById('cheat-fly').onchange = e => cheats.fly = e.target.checked;
-document.getElementById('cheat-speed').onchange = e => cheats.speed = e.target.checked;
-document.getElementById('cheat-score').onchange = e => cheats.scoreMultiplier =
-e.target.checked;
-}
-function animate() {
-requestAnimationFrame(animate);
-let speed = gameSpeed * (cheats.speed ? 4.0 : 1.0);
-if (player) {
-targetX = lane * 2.5;
-player.position.x += (targetX - player.position.x) * 0.15;
-if (cheats.fly) {
-player.position.y = 3.5;
-} else if (isJumping) {
-player.position.y += jumpVelocity;
-jumpVelocity -= 0.02;
-if (player.position.y <= 0) { player.position.y = 0; isJumping = false; }
-}
-}
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        container.appendChild(renderer.domElement);
 
-4
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
 
-score += Math.floor(speed * 10 * (cheats.scoreMultiplier ? 100 : 1));
-document.getElementById('score').innerText = score;
-document.getElementById('hp').innerText = cheats.god ? 'GOD (999)' : hp;
-renderer.render(scene, camera);
-}
-</script>
+        // --- LIGHTING (Prevent Black Screen) ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xff758c, 1.5);
+        dirLight.position.set(5, 10, 7);
+        scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0x70a1ff, 1.0);
+        backLight.position.set(-5, -5, -5);
+        scene.add(backLight);
+
+        // --- LOAD 3D MODEL ---
+        let ghostModel = null;
+        const loader = new THREE.GLTFLoader();
+        loader.load('scene.gltf', (gltf) => {
+            ghostModel = gltf.scene;
+            ghostModel.scale.set(1, 1, 1);
+            ghostModel.position.set(0, 0, 0);
+            scene.add(ghostModel);
+            
+            document.getElementById('loading').style.display = 'none';
+        }, (xhr) => {
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        }, (error) => {
+            console.error('An error happened loading GLTF:', error);
+            document.getElementById('loading').innerText = 'Error loading 3D Model! Check console.';
+        });
+
+        // --- GAME STATE & CHEAT ENGINE ---
+        let score = 0;
+        const cheats = {
+            godMode: false,
+            flyMode: false,
+            superSpeed: false,
+            scoreMultiplier: false
+        };
+
+        // UI Event Listeners
+        document.getElementById('cheat-god').addEventListener('change', (e) => cheats.godMode = e.target.checked);
+        document.getElementById('cheat-fly').addEventListener('change', (e) => cheats.flyMode = e.target.checked);
+        document.getElementById('cheat-speed').addEventListener('change', (e) => cheats.superSpeed = e.target.checked);
+        document.getElementById('cheat-score').addEventListener('change', (e) => cheats.scoreMultiplier = e.target.checked);
+
+        // Hotkey [G] for God Mode Panel & Sound Triggers [1-5]
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'g' || e.key === 'G') {
+                const panel = document.getElementById('god-panel');
+                panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            }
+            if (e.key === '1') playSound('scare1');
+            if (e.key === '2') playSound('crying');
+            if (e.key === '3') playSound('laugh');
+            if (e.key === '4') playSound('singing');
+            if (e.key === '5') playSound('growl');
+        });
+
+        // --- ANIMATION LOOP ---
+        let clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+
+            let delta = clock.getDelta();
+
+            // Score increment logic with Multiplier cheat
+            let addScore = cheats.scoreMultiplier ? 100 : 1;
+            score += addScore;
+            document.getElementById('score-val').innerText = score;
+
+            // Status display update
+            let activeCheats = [];
+            if (cheats.godMode) activeCheats.push("God");
+            if (cheats.flyMode) activeCheats.push("Fly");
+            if (cheats.superSpeed) activeCheats.push("Speed");
+            if (cheats.scoreMultiplier) activeCheats.push("x100");
+            
+            const statusVal = document.getElementById('status-val');
+            if (activeCheats.length > 0) {
+                statusVal.innerText = "CHEEATING (" + activeCheats.join(", ") + ")";
+                statusVal.style.color = "#ff4757";
+            } else {
+                statusVal.innerText = "Normal";
+                statusVal.style.color = "#4cd137";
+            }
+
+            // Gentle floating animation for the ghost model
+            if (ghostModel) {
+                let speedFactor = cheats.superSpeed ? 5.0 : 1.0;
+                let hoverHeight = cheats.flyMode ? Math.sin(clock.getElapsedTime() * 3 * speedFactor) * 1.5 + 1.0 : Math.sin(clock.getElapsedTime() * 2) * 0.2;
+                ghostModel.position.y = hoverHeight;
+                ghostModel.rotation.y += 0.01 * speedFactor;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // --- WINDOW RESIZE ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
